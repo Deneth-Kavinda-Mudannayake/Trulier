@@ -21,3 +21,5 @@ To install Trulier, follow these steps:
 
 Once installed, you can use Trulier by simply typing "trulier" in the terminal
 
+##Tag
+@trulier @website clone
