@@ -90,7 +90,9 @@ def clone_website(url, output_dir):
         # Save HTML content to a file
         html_filename = os.path.join(output_dir, 'index.html')
         html_content_with_local_paths = download_resources(url, html_content, output_dir)
-        save_content(html_content_with_local_paths.encode('utf-8'), html_filename, mode='w')
+        
+        # Save as text, no need to encode
+        save_content(html_content_with_local_paths, html_filename, mode='w')
 
         print("Website cloned successfully!")
     except KeyboardInterrupt:
