@@ -28,8 +28,8 @@ def fetch_html(url):
     return response.text
 
 # Function to save content to a file
-def save_content(content, filename):
-    with open(filename, 'wb') as file:
+def save_content(content, filename, mode='wb'):
+    with open(filename, mode) as file:
         file.write(content)
 
 # Function to download resources (CSS, JavaScript, images, etc.)
@@ -40,21 +40,28 @@ def download_resources(url, content, output_dir):
     resource_tags = soup.find_all(['link', 'script', 'img'])
 
     for tag in resource_tags:
-        if tag.name == 'link' and tag.get('href'):
-            resource_url = urljoin(url, tag['href'])
-            tag['href'] = os.path.relpath(os.path.join(output_dir, os.path.basename(urlparse(resource_url).path)), os.path.dirname(os.path.join(output_dir, 'index.html')))
-        elif tag.name == 'script' and tag.get('src'):
-            resource_url = urljoin(url, tag['src'])
-            tag['src'] = os.path.relpath(os.path.join(output_dir, os.path.basename(urlparse(resource_url).path)), os.path.dirname(os.path.join(output_dir, 'index.html')))
-        elif tag.name == 'img' and tag.get('src'):
-            resource_url = urljoin(url, tag['src'])
-            tag['src'] = os.path.relpath(os.path.join(output_dir, os.path.basename(urlparse(resource_url).path)), os.path.dirname(os.path.join(output_dir, 'index.html')))
-
-        # Get the filename of the resource
-        resource_filename = os.path.join(output_dir, os.path.basename(urlparse(resource_url).path))
-
-        # Download and save the resource
+        resource_url = None  # Initialize to prevent unbound error
+        
         try:
+            # Handle different tag types
+            if tag.name == 'link' and tag.get('href'):
+                resource_url = urljoin(url, tag['href'])
+                tag['href'] = os.path.relpath(os.path.join(output_dir, os.path.basename(urlparse(resource_url).path)), os.path.dirname(os.path.join(output_dir, 'index.html')))
+            elif tag.name == 'script' and tag.get('src'):
+                resource_url = urljoin(url, tag['src'])
+                tag['src'] = os.path.relpath(os.path.join(output_dir, os.path.basename(urlparse(resource_url).path)), os.path.dirname(os.path.join(output_dir, 'index.html')))
+            elif tag.name == 'img' and tag.get('src'):
+                resource_url = urljoin(url, tag['src'])
+                tag['src'] = os.path.relpath(os.path.join(output_dir, os.path.basename(urlparse(resource_url).path)), os.path.dirname(os.path.join(output_dir, 'index.html')))
+            
+            # If resource_url is still None, skip this iteration
+            if resource_url is None:
+                continue
+            
+            # Get the filename of the resource
+            resource_filename = os.path.join(output_dir, os.path.basename(urlparse(resource_url).path))
+
+            # Download and save the resource
             response = requests.get(resource_url)
             if response.status_code == 200:
                 save_content(response.content, resource_filename)
@@ -83,7 +90,7 @@ def clone_website(url, output_dir):
         # Save HTML content to a file
         html_filename = os.path.join(output_dir, 'index.html')
         html_content_with_local_paths = download_resources(url, html_content, output_dir)
-        save_content(html_content_with_local_paths.encode('utf-8'), html_filename)
+        save_content(html_content_with_local_paths.encode('utf-8'), html_filename, mode='w')
 
         print("Website cloned successfully!")
     except KeyboardInterrupt:
